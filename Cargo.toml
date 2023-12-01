@@ -1,0 +1,23 @@
+[package]
+name = "aoc23"
+version = "0.1.0"
+edition = "2021"
+default-run = "aoc23"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+proc-macro = true
+
+[profile.dev]
+overflow-checks = false
+
+[dependencies]
+itertools = "0.10"
+hashbrown = "0.13"
+serde_json = "1.0"
+rayon = "1.6"
+
+# lib proc-macro dependencies
+syn = { version = "1.0", features = ["full"] }
+quote = "1.0"
