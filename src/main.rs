@@ -1,3 +1,5 @@
+// Full credit to https://github.com/AxlLind/AdventOfCode2022
+
 use std::{fs, process::Command, error::Error};
 use itertools::Itertools;
 

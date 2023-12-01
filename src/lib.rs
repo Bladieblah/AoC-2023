@@ -1,3 +1,5 @@
+// Full credit to https://github.com/AxlLind/AdventOfCode2022
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, ItemFn, NestedMeta, Lit, Ident};
