@@ -14,7 +14,6 @@ fn parse_game(line: &str) -> Option<(usize, usize)> {
     };
   }
 
-  println!("Found game {} to be {} with rgb ({}, {}, {}) = {}", id, valid, r, g, b, r * g * b);
   if valid {Some((id.parse().ok().unwrap_or(0), r * g * b))} else {Some((0, r * g * b))}
 }
 
