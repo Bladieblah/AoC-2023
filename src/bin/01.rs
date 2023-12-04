@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 fn foo(s: &str) -> usize {
   let digs: Vec<char> = s.chars().filter(|c| c.is_digit(10)).collect();
   let first = digs.first().and_then(|c| c.to_digit(10)).unwrap_or(0) as usize;
@@ -7,7 +5,7 @@ fn foo(s: &str) -> usize {
   10 * first + last
 }
 
-fn prepString(s: &str) -> String {
+fn prep_string(s: &str) -> String {
   let replacements = [
     ("one", "o1e"),
     ("two", "t2o"),
@@ -29,7 +27,7 @@ fn prepString(s: &str) -> String {
 }
 
 fn bar(s: &str) -> usize {
-  let digs: Vec<char> = prepString(s).chars().filter(|c| c.is_digit(10)).collect();
+  let digs: Vec<char> = prep_string(s).chars().filter(|c| c.is_digit(10)).collect();
   let first = digs.first().and_then(|c| c.to_digit(10)).unwrap_or(0) as usize;
   let last  = digs.last().and_then(|c| c.to_digit(10)).unwrap_or(0) as usize;
   10 * first + last
