@@ -12,8 +12,10 @@ fn parse_row(row: &str) -> (Vec<char>, Vec<char>) {
 
 fn count_perms(springs: &[char], spaces: &[char]) -> usize {
   if springs.len() == 0 {
-    1
+    // println!("Finished!");
+    spaces.iter().all(|c| *c != '#') as usize
   } else if spaces.len() < springs.len() {
+    // println!("Stuck!");
     0
   } else {
     match (springs[0], spaces[0]) {
@@ -35,13 +37,7 @@ fn main(input: &str) -> (usize, usize) {
   let mut p2 = 0;
 
   let spring_data = input.split("\n").map(|row| parse_row(row)).collect_vec();
-  let mappings = spring_data.iter().map(|(springs, spaces)| count_perms(springs, spaces)).collect_vec();
-
-  for (i, m) in mappings.iter().enumerate() {
-    println!("Row {} had {} mappings", i, m);
-  }
-
-  let p1 = mappings.iter().sum();
+  let p1 = spring_data.iter().map(|(springs, spaces)| count_perms(springs, spaces)).collect_vec().iter().sum();
 
   (p1,p2)
 }
