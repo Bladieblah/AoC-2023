@@ -66,23 +66,20 @@ fn main(input: &str) -> (usize, usize) {
 
 
   let mut hashes = HashMap::new();
-  let mut rem = 0;
+  let mut target = 0;
   hashes.insert(grid.clone(), 0);
 
   for i in 1..1000 {
     cycle(&mut grid, n);
     if hashes.contains_key(&grid) {
-      rem = (1000000000 - i) % (i - hashes[&grid]);
+      let rem = (1000000000 - i) % (i - hashes[&grid]);
+      target = hashes[&grid] + rem;
       break;
     }
     hashes.insert(grid.clone(), i);
   }
 
-  for _ in 0..rem {
-    cycle(&mut grid, n);
-  }
-
-  let p2 = calc_support(&grid, n);
+  let p2 = calc_support(hashes.iter().filter(|(_, v)| **v == target).nth(0).unwrap().0, n);
 
   (p1, p2)
 }
