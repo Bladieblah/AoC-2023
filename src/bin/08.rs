@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use num::integer::lcm;
 
 use itertools::Itertools;

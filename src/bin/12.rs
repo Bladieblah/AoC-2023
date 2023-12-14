@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use hashbrown::HashMap;
 use itertools::Itertools;
 
 fn count_perms(cache: &mut Option<HashMap<(usize, usize), usize>>, springs: &[u8], spaces: &[u8]) -> usize {

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use hashbrown::HashMap;
 
 fn find_symbols(input: &str) -> HashMap<(usize, usize), (char, Vec<usize>)> {
   let mut symbols = HashMap::<(usize, usize), (char, Vec<usize>)>::new();
