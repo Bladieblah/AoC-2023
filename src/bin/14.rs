@@ -71,12 +71,11 @@ fn main(input: &str) -> (usize, usize) {
 
   for i in 1..1000 {
     cycle(&mut grid, n);
-    if hashes.contains_key(&grid) {
-      let rem = (1000000000 - i) % (i - hashes[&grid]);
-      target = hashes[&grid] + rem;
+    if let Some(matched) = hashes.insert(grid.clone(), i) {
+      let rem = (1000000000 - i) % (i - matched);
+      target = matched + rem;
       break;
     }
-    hashes.insert(grid.clone(), i);
   }
 
   let p2 = calc_support(hashes.iter().filter(|(_, v)| **v == target).nth(0).unwrap().0, n);
