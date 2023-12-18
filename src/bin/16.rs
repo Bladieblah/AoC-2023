@@ -1,7 +1,7 @@
 use hashbrown::{HashMap, HashSet};
 use itertools::Itertools;
   
-fn step(direction: char, pos: (i32, i32)) -> (i32, i32) {
+fn step(direction: char, pos: (usize, usize)) -> (usize, usize) {
   match direction {
     'S' => (pos.0, pos.1 + 1),
     'N' => (pos.0, pos.1 - 1),
@@ -11,7 +11,7 @@ fn step(direction: char, pos: (i32, i32)) -> (i32, i32) {
   }
 }
 
-fn step_back(direction: char, pos: (i32, i32)) -> (i32, i32) {
+fn step_back(direction: char, pos: (usize, usize)) -> (usize, usize) {
   match direction {
     'S' => (pos.0, pos.1 - 1),
     'N' => (pos.0, pos.1 + 1),
@@ -21,9 +21,9 @@ fn step_back(direction: char, pos: (i32, i32)) -> (i32, i32) {
   }
 }
 
-fn traverse(grid: &Vec<&[u8]>, direction: char, pos: (i32, i32), size: i32, visited: &mut HashSet<((i32, i32), char)>, paths: &HashMap<((i32, i32), char), ((i32, i32), char, HashSet<((i32,i32), char)>)>) {
+fn traverse(grid: &Vec<&[u8]>, direction: char, pos: (usize, usize), size: usize, visited: &mut HashSet<((usize, usize), char)>, paths: &HashMap<((usize, usize), char), ((usize, usize), char, HashSet<((usize,usize), char)>)>) {
   // println!("Heading {} to {} at ({}, {}), seen {}", direction, grid[pos.1 as usize][pos.0 as usize] as char, pos.0, pos.1, visited.len());
-  if visited.contains(&(pos, direction)) || pos.0 < 0 || pos.0 >= size || pos.1 < 0 || pos.1 >= size {return;}
+  if visited.contains(&(pos, direction)) || pos.0 >= size || pos.1 >= size {return;}
   visited.insert((pos, direction));
   let symbol = grid[pos.1 as usize][pos.0 as usize];
   match (symbol, direction) {
@@ -67,8 +67,8 @@ fn traverse(grid: &Vec<&[u8]>, direction: char, pos: (i32, i32), size: i32, visi
   };
 }
 
-fn find_next_split(grid: &Vec<&[u8]>, direction: char, pos: (i32, i32), size: i32, visited: &mut HashSet<((i32, i32), char)>) -> ((i32, i32), char) {
-  if pos.0 < 0 || pos.0 >= size || pos.1 < 0 || pos.1 >= size {return (step_back(direction, pos), direction);}
+fn find_next_split(grid: &Vec<&[u8]>, direction: char, pos: (usize, usize), size: usize, visited: &mut HashSet<((usize, usize), char)>) -> ((usize, usize), char) {
+  if pos.0 >= size || pos.1 >= size {return (step_back(direction, pos), direction);}
   let symbol = grid[pos.1 as usize][pos.0 as usize];
   if symbol == b'-' || symbol == b'|' {return (pos, direction)};
   visited.insert((pos, direction));
@@ -89,23 +89,23 @@ fn find_next_split(grid: &Vec<&[u8]>, direction: char, pos: (i32, i32), size: i3
 #[aoc23::main(16)]
 fn main(input: &str) -> (usize, usize) {
   let grid = input.split_whitespace().map(|line| line.as_bytes()).collect_vec();
-  let size = grid.len() as i32;
+  let size = grid.len() as usize;
 
   let mut visited = HashSet::new();
-  let mut paths = HashMap::<((i32, i32), char), ((i32, i32), char, HashSet<((i32,i32), char)>)>::new();
+  let mut paths = HashMap::<((usize, usize), char), ((usize, usize), char, HashSet<((usize,usize), char)>)>::new();
   
   for j in 0..size {
     for i in 0..size {
       let symbol = grid[j as usize][i as usize];
       match symbol {
         b'|' => for direction in vec!['N','S'] {
-          let mut visited = HashSet::<((i32,i32), char)>::new();
+          let mut visited = HashSet::<((usize,usize), char)>::new();
           let (new_pos, new_dir) = find_next_split(&grid, direction, step(direction, (i,j)), size, &mut visited);
           // println!("{}, {} -> {}", i, j, visited.len());
           paths.insert(((i,j), direction), (new_pos, new_dir, visited.clone()));
         },
         b'-' => for direction in vec!['E','W'] {
-          let mut visited = HashSet::<((i32,i32), char)>::new();
+          let mut visited = HashSet::<((usize,usize), char)>::new();
           let (new_pos, new_dir) = find_next_split(&grid, direction, step(direction, (i,j)), size, &mut visited);
           // println!("{}, {} -> {}", i, j, visited.len());
           paths.insert(((i,j), direction), (new_pos, new_dir, visited.clone()));
