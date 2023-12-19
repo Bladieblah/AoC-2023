@@ -103,7 +103,6 @@ fn main(input: &str) -> (usize, usize) {
       }
     }).collect_vec();
   }
-  
 
   (p1, p2)
 }
