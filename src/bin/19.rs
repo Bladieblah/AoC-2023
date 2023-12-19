@@ -12,6 +12,44 @@ fn run_rule<'a>(rule: &Vec<(usize, char, usize, &'a str)>, part: &Vec<usize>) ->
   unreachable!()
 }
 
+fn run_rule_range<'a>(rule: &Vec<(usize, char, usize, &'a str)>, _part: &Vec<(usize, usize)>) -> Vec<(&'a str, Vec<(usize, usize)>)> {
+  let mut part = _part.clone();
+  let mut split_parts = Vec::new();
+  for (s, op, t, r) in rule {
+    match op {
+      '>' => {
+        if *t < part[*s].0 {
+          split_parts.push((*r, part));
+          break;
+        } else if *t >= part[*s].1 {
+          continue;
+        } else {
+          let mut new_part = part.clone();
+          new_part[*s].0 = *t + 1;
+          split_parts.push((*r, new_part));
+          part[*s].1 = *t;
+        }
+      },
+      '<' => {
+        if *t > part[*s].1 {
+          split_parts.push((*r, part));
+          break;
+        } else if *t <= part[*s].0 {
+          continue;
+        } else {
+          let mut new_part = part.clone();
+          new_part[*s].1 = *t - 1;
+          split_parts.push((*r, new_part));
+          part[*s].0 = *t;
+        }
+      },
+      _ => unreachable!()
+    };
+  }
+  
+  return split_parts
+}
+
 #[aoc23::main(19)]
 fn main(input: &str) -> (usize, usize) {
   let (_workflows, _parts) = input.split_once("\n\n").unwrap();
@@ -54,5 +92,18 @@ fn main(input: &str) -> (usize, usize) {
     }
   });
 
-  (p1,0)
+  let mut parts = vec![("in", vec![(1,4000); 4])];
+  let mut p2 = 0;
+  while parts.len() > 0 {
+    parts = parts.iter().flat_map(|(dst, part)| {
+      match *dst {
+        "A" => {p2 += part.iter().fold(1, |acc, (a,b)| acc * (b - a + 1)); vec![]}
+        "R" => vec![],
+        _ => run_rule_range(workflows.get(dst).unwrap(), part)
+      }
+    }).collect_vec();
+  }
+  
+
+  (p1, p2)
 }
