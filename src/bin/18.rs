@@ -1,99 +1,44 @@
 use itertools::Itertools;
 
-fn step(pos: (i32, i32), d: u8) -> (i32, i32) {
+fn step(pos: (i64, i64), d: char, l: i64) -> (i64, i64) {
   match d {
-    b'R' => (pos.0 + 1, pos.1),
-    b'L' => (pos.0 - 1, pos.1),
-    b'U' => (pos.0, pos.1 - 1),
-    b'D' => (pos.0, pos.1 + 1),
+    'R' => (pos.0 + l, pos.1),
+    'L' => (pos.0 - l, pos.1),
+    'U' => (pos.0, pos.1 - l),
+    'D' => (pos.0, pos.1 + l),
     _ => unreachable!()
   }
-}
-
-fn step2(pos: (usize, usize), d: u8) -> (usize, usize) {
-  match d {
-    b'R' => (pos.0 + 1, pos.1),
-    b'L' => (pos.0 - 1, pos.1),
-    b'U' => (pos.0, pos.1 - 1),
-    b'D' => (pos.0, pos.1 + 1),
-    _ => unreachable!()
-  }
-}
-
-fn find_bounds(trenches: &Vec<(u8, usize, &str)>) -> ((i32, i32), (i32, i32)) {
-  let mut pos: (i32, i32) = (0,0);
-  let mut mipos: (i32, i32) = (0,0);
-  let mut mapos: (i32, i32) = (0,0);
-
-  for (d, l, _) in trenches {
-    for _ in 0..(*l) {
-      pos = step(pos, *d);
-      mipos.0 = mipos.0.min(pos.0);
-      mipos.1 = mipos.1.min(pos.1);
-      mapos.0 = mapos.0.max(pos.0);
-      mapos.1 = mapos.1.max(pos.1);
-    }
-  }
-
-  (mipos, mapos)
 }
 
 #[aoc23::main(18)]
-fn main(input: &str) -> (usize, usize) {
+fn main(input: &str) -> (i64, i64) {
   let trenches = input.split("\n").map(|line| {
     let mut it = line.split_ascii_whitespace();
-    (
-      it.next().unwrap().parse::<char>().unwrap() as u8,
-      it.next().unwrap().parse::<usize>().unwrap(),
-      it.next().unwrap()
-    )
+    let d1 =  it.next().unwrap().parse::<char>().unwrap();
+    let l1 = it.next().unwrap().parse::<i64>().unwrap();
+    let color = it.next().unwrap();
+    let d2 = ['R','D','L','U'][(color.as_bytes()[7] - b'0') as usize];
+    let l2 = i64::from_str_radix(&color[2..7], 16).unwrap();
+    (d1, l1, d2, l2)
   }).collect_vec();
 
-  let (mipos, mapos) = find_bounds(&trenches);
+  let mut pos1 = (0,0);
+  let mut pos2 = (0,0);
+  let paths = trenches.iter().map(|(d1, l1, d2, l2)| {
+    pos1 = step(pos1, *d1, *l1);
+    pos2 = step(pos2, *d2, *l2);
+    (pos1.clone(), pos2.clone())
+  }).collect_vec();
 
-  let width = (mapos.0 - mipos.0 + 1) as usize;
-  let height = (mapos.1 - mipos.1 + 1) as usize;
+  let mut last = paths.last().unwrap().clone();
+  let (p1, p2) = paths.iter().fold((0, 0), |(p1, p2), (pos0, pos1)| {
+    let result = (
+      p1 + last.0.0 * pos0.1 - last.0.1 * pos0.0 + (last.0.0 - pos0.0).abs() + (last.0.1 - pos0.1).abs(),
+      p2 + last.1.0 * pos1.1 - last.1.1 * pos1.0 + (last.1.0 - pos1.0).abs() + (last.1.1 - pos1.1).abs()
+    );
+    last = (*pos0, *pos1);
+    result
+  });
 
-  let mut grid = vec![vec!['.'; width]; height];
-  let mut pos = ((-mipos.0) as usize, (-mipos.1) as usize);
-  let mut prev_d = trenches.last().unwrap().0;
-
-  for (d, l, _) in trenches {
-    grid[pos.1][pos.0] = match prev_d + d {
-      144|167 => '/',
-      150|161 => '\\',
-      _ => unreachable!()
-    };
-    pos = step2(pos, d);
-    let symbol = match d {
-      b'L'|b'R' => '-',
-      b'U'|b'D' => '|',
-      _ => unreachable!()
-    };
-    for _ in 1..l {
-      grid[pos.1][pos.0] = symbol;
-      pos = step2(pos, d);
-    }
-    prev_d = d;
-  }
-
-  let mut p1 = 0;
-  
-  for line in grid {
-    let mut inside = false;
-    let mut edge = false;
-    for c in line {
-      match c {
-        '.' => p1 += {edge = false; inside as usize},
-        '/' => {inside = inside ^ edge; edge = true;  p1 += 1},
-        '\\' => {inside = inside ^ !edge; edge = true;  p1 += 1},
-        '|' => {inside = !inside; edge = true;  p1 += 1},
-        _ => {edge = true; p1 += 1}
-      };
-    }
-  }
-
-  let p2 = 0;
-
-  (p1,p2)
+  (p1 / 2 + 1, p2 / 2 + 1)
 }
