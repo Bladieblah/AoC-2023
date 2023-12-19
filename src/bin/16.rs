@@ -1,4 +1,4 @@
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashSet;
 use itertools::Itertools;
 
 // enum Direction {
@@ -66,7 +66,7 @@ fn traverse2(grid: &Vec<&[u8]>, pos: (usize, usize, usize), size: usize, visited
 }
 
 fn find_loop(grid: &Vec<&[u8]>) -> Option<Vec<(usize, usize, usize)>> {
-  let mut branches = vec![((10,0,2), vec![(10,0,2)])];
+  let mut branches = vec![((0,0,1), vec![(0,0,1)])];
 
   for _ in 0..1000 {
     let mut new_branches = Vec::new();
@@ -108,48 +108,33 @@ fn main(input: &str) -> (usize, usize) {
   let grid = input.split_whitespace().map(|line| line.as_bytes()).collect_vec();
   let size = grid.len() as usize;
 
-  // println!("I made {} paths", paths.len());
   let mut full_loop = vec![vec![vec![false; 4]; size]; size];
   let mut loop_length = 0;
   if let Some(seed_loop) = find_loop(&grid) {
     traverse(&grid, *seed_loop.first().unwrap(), size, &mut full_loop);
     loop_length = full_loop.iter().flat_map(|row| row).fold(0, |acc, cell| acc + cell.iter().any(|d| *d) as usize);
-    println!("Woah cluster of length {}!", loop_length);
   }
-
-  // for row in &full_loop {
-  //   for cell in row {
-  //     let s = if cell.iter().any(|&c| c) {'#'} else {'.'};
-  //     print!("{}", s);
-  //   }
-  //   println!("");
-  // }
 
   let mut visited = HashSet::new();
   let hit = traverse2(&grid, (0, 0, 1), size, &mut visited, &full_loop);
   let p1 = if !hit {
     visited.iter().map(|(x,y,_)| (x,y)).collect::<HashSet<_>>().len()
   } else {
-    visited.iter().map(|(x,y,_)| (*x,*y)).fold(loop_length, |acc, (x, y)| acc + full_loop[y][x].iter().all(|&c| !c) as usize)
+    visited.iter().map(|(x,y,_)| (*x,*y)).collect::<HashSet<_>>()
+    .iter().fold(loop_length, |acc, (x, y)| acc + full_loop[*y][*x].iter().all(|&c| !c) as usize)
   };
 
-  // let mut p1 = 0;
-  let mut p2 = 0;
   let p2 = (0..size).flat_map(|i| [(size - 1, i, 3), (0, i, 1)])
     .chain((0..size).flat_map(|i| [(i, size - 1, 0), (i, 0, 2)]))
     .map(|pos| {
-      let now = ::std::time::Instant::now();
       let mut visited = HashSet::new();
       let hit = traverse2(&grid, pos, size, &mut visited, &full_loop);
-      let result = if !hit {
+      if !hit {
         visited.iter().map(|(x,y,_)| (x,y)).collect::<HashSet<_>>().len()
       } else {
-        visited.iter().map(|(x,y,_)| (*x,*y)).fold(loop_length, |acc, (x, y)| acc + full_loop[y][x].iter().all(|&c| !c) as usize)
-      };
-
-      let elapsed = now.elapsed();
-      println!("Start ({}, {}) dir {} len {}, took {}μs", pos.0, pos.1, pos.2, result, elapsed.as_micros());
-      result
+        visited.iter().map(|(x,y,_)| (*x,*y)).collect::<HashSet<_>>()
+        .iter().fold(loop_length, |acc, (x, y)| acc + full_loop[*y][*x].iter().all(|&c| !c) as usize)
+      }
     })
     .max().unwrap();
 
