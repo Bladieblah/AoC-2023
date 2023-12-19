@@ -40,19 +40,25 @@ fn traverse(grid: &Vec<&[u8]>, pos: (usize, usize, usize), size: usize, visited:
 
 fn traverse2(grid: &Vec<&[u8]>, pos: (usize, usize, usize), size: usize, visited: &mut HashSet<(usize, usize, usize)>, main_loop: &Vec<Vec<Vec<bool>>>) -> bool {
   if pos.0 >= size || pos.1 >= size {return false}
-  if main_loop[pos.1][pos.0][pos.2] {return true}
+  
+  let symbol = grid[pos.1 as usize][pos.0 as usize];
+  match (symbol, pos.2) {
+    (b'-', 0|2) => if main_loop[pos.1][pos.0][pos.2] {return true},
+    (b'|', 1|3) => if main_loop[pos.1][pos.0][pos.2] {return true},
+    _ => {}
+  }
+
   if visited.contains(&pos) {return false}
   visited.insert(pos);
-  let symbol = grid[pos.1 as usize][pos.0 as usize];
   return match (symbol, pos.2) {
     (b'/', _)  => traverse2(grid, step(pos, [1,0,3,2][pos.2]), size, visited, main_loop),
     (b'\\', _) => traverse2(grid, step(pos, [3,2,1,0][pos.2]), size, visited, main_loop),
     (b'|', 1|3) => 
-      traverse2(grid, step(pos, 0), size, visited, main_loop) ||
+      traverse2(grid, step(pos, 0), size, visited, main_loop) |
       traverse2(grid, step(pos, 2), size, visited, main_loop)
     ,
     (b'-', 0|2) => {
-      traverse2(grid, step(pos, 1), size, visited, main_loop) ||
+      traverse2(grid, step(pos, 1), size, visited, main_loop) |
       traverse2(grid, step(pos, 3), size, visited, main_loop)
     },
     (_, _) => traverse2(grid, step(pos, pos.2), size, visited, main_loop),
@@ -140,6 +146,7 @@ fn main(input: &str) -> (usize, usize) {
       } else {
         visited.iter().map(|(x,y,_)| (*x,*y)).fold(loop_length, |acc, (x, y)| acc + full_loop[y][x].iter().all(|&c| !c) as usize)
       };
+
       let elapsed = now.elapsed();
       println!("Start ({}, {}) dir {} len {}, took {}μs", pos.0, pos.1, pos.2, result, elapsed.as_micros());
       result
