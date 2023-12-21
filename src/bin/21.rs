@@ -10,11 +10,12 @@ fn step(pos: (usize, usize), direction: char) -> (usize, usize) {
   }
 }
 
-fn count_tiles(garden: &Vec<&[u8]>, start: (usize, usize), size: usize, steps: usize, odd: usize, icorr: usize) -> usize {
+fn count_tiles(garden: &Vec<&[u8]>, start: (usize, usize), size: usize, steps: usize) -> (usize, usize, usize) {
   let mut visited = vec![vec![false; size]; size];
   let mut positions = vec![start.clone()];
-  let mut acc = 0;
-  let mut corr = 0;
+  let mut even = 0;
+  let mut odd = 0;
+  let mut p1 = 0;
 
   for i in 1..=steps {
     let mut new_positions = vec![];
@@ -24,15 +25,15 @@ fn count_tiles(garden: &Vec<&[u8]>, start: (usize, usize), size: usize, steps: u
         if new_pos.0 >= size || new_pos.1 >= size || visited[new_pos.1][new_pos.0] ||  garden[new_pos.1][new_pos.0] == b'#' {continue;}
         visited[new_pos.1][new_pos.0] = true;
         new_positions.push(new_pos);
-        if i % 2 == odd {acc += 1}
+        if i % 2 == 0 {even += 1} else {odd += 1}
       }
     }
 
     positions = new_positions;
-    if i == icorr {corr = acc};
+    if i == 64 {p1 = even}
   }
 
-  acc - corr
+  (even,odd,p1)
 }
 
 #[aoc23::main(21)]
@@ -40,29 +41,20 @@ fn main(input: &str) -> (usize, usize) {
   let garden = input.split("\n").map(|line| line.as_bytes()).collect_vec();
   let size = garden.len();
   let start = (0..size).cartesian_product(0..size).into_iter().filter(|(i,j)| garden[*j][*i] == b'S').next().unwrap();
-  let empty = garden.iter().fold(0, |acc, line| acc + line.iter().fold(0, |acc, &c| acc + ((c != b'#') as usize)));
-  let even = garden.iter().enumerate().fold(0, |acc, (j, line)| 
-  acc + line.iter().enumerate().fold(0, |acc, (i, c)| acc + (((i + j) % 2 == 0 && *c != b'#') as usize)));
-
-  println!("Total {}, even {}", empty, even);
   
-  let p1 = count_tiles(&garden, start.clone(), size, 64, 0, 0);
+  let (even, odd, p1) = count_tiles(&garden, start.clone(), size, size + 1);
+  let empty = even + odd;
+
+  println!("even {} + odd {} = {}", even, odd, empty);
 
   let corners = vec![(0,0), (0,size-1), (size-1, size-1), (size-1, 0)];
   let centers = vec![(0,start.1), (size-1,start.1), (start.0,0), (start.0,size-1)];
   
-  let correction1: usize = corners.iter().map(|s| count_tiles(&garden, *s, size, 64, 0, 0)).sum();
-  let correction2: usize = corners.iter().map(|s| count_tiles(&garden, *s, size, 195, 1, 0)).sum();
-  let correction3: usize = centers.iter().map(|s| count_tiles(&garden, *s, size, 130, 0, 0)).sum();
-
-  println!("Correction1 = {}", correction1);
-  println!("Correction2 = {}", correction2 - 2 * even);
-  println!("Correction3 = {}", correction3 - even);
-
-  println!("Check: {}", count_tiles(&garden, start, size, 2*131+65, 1, 0));
+  let correction1 = corners.iter().map(|s| count_tiles(&garden, *s, size, 64).0).sum::<usize>();
+  let correction2 = corners.iter().map(|s| count_tiles(&garden, *s, size, 195).1).sum::<usize>() - 2 * odd;
+  let correction3 = centers.iter().map(|s| count_tiles(&garden, *s, size, 130).0).sum::<usize>() - odd;
 
   let r = (26501365 - start.0) / size;
-  // let r = 2;
 
-  (p1, r * r * empty + correction1 * r + correction2 * (r-1) + correction3)
+  (p1, r * r * empty + (correction1 + correction2) * r + correction3 - correction2)
 }
