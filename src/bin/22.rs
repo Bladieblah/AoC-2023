@@ -24,7 +24,6 @@ fn main(input: &str) -> (usize, usize) {
 
   for (i, brick) in bricks.iter().enumerate() {
     let brick_h = brick.1.0 - brick.0.0 + 1;
-    // println!("Brick {} at ({},{},{}) -> ({},{},{}) h = {}", i + 1, brick.0.2, brick.0.1, brick.0.0, brick.1.2, brick.1.1, brick.1.0, brick_h);
     let mut _heights = HashSet::new();
     for x in brick.0.2..=brick.1.2 {
       for y in brick.0.1..=brick.1.1 {
@@ -40,7 +39,6 @@ fn main(input: &str) -> (usize, usize) {
       for y in brick.0.1..=brick.1.1 {
         if heights[x][y] == h {
           if highest[x][y] != 0 {
-            // println!("Supported at ({}, {}) at height {} by {}", x, y, h, highest[x][y]);
             supports.insert(highest[x][y]);
             supported[i+1].insert(highest[x][y]);
             supporting[highest[x][y]].insert(i+1);
@@ -52,12 +50,9 @@ fn main(input: &str) -> (usize, usize) {
     }
 
     if supports.len() == 1 {
-      // println!("### Brick {} is critical, supports {}", supports.iter().next().unwrap(), i+1);
       critical[*supports.iter().next().unwrap()] = true;
       single_support[i+1] = true;
     }
-
-    // println!("");
   }
 
   let p1 = critical.iter().skip(1).fold(0, |acc, &c| acc + !c as usize);
