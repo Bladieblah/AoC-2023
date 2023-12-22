@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use hashbrown::HashSet;
 use itertools::Itertools;
 
@@ -22,6 +24,7 @@ fn main(input: &str) -> (usize, usize) {
 
   for (i, brick) in bricks.iter().enumerate() {
     let brick_h = brick.1.0 - brick.0.0 + 1;
+    // println!("Brick {} at ({},{},{}) -> ({},{},{}) h = {}", i + 1, brick.0.2, brick.0.1, brick.0.0, brick.1.2, brick.1.1, brick.1.0, brick_h);
     let mut _heights = HashSet::new();
     for x in brick.0.2..=brick.1.2 {
       for y in brick.0.1..=brick.1.1 {
@@ -37,6 +40,7 @@ fn main(input: &str) -> (usize, usize) {
       for y in brick.0.1..=brick.1.1 {
         if heights[x][y] == h {
           if highest[x][y] != 0 {
+            // println!("Supported at ({}, {}) at height {} by {}", x, y, h, highest[x][y]);
             supports.insert(highest[x][y]);
             supported[i+1].insert(highest[x][y]);
             supporting[highest[x][y]].insert(i+1);
@@ -48,25 +52,19 @@ fn main(input: &str) -> (usize, usize) {
     }
 
     if supports.len() == 1 {
+      // println!("### Brick {} is critical, supports {}", supports.iter().next().unwrap(), i+1);
       critical[*supports.iter().next().unwrap()] = true;
       single_support[i+1] = true;
     }
+
+    // println!("");
   }
 
   let p1 = critical.iter().skip(1).fold(0, |acc, &c| acc + !c as usize);
 
-  // let p2 = (1..=bricks.len()).map(|i| {
-  //   let mut removed: HashSet<usize> = HashSet::from_iter([i]);
-  //   for j in i+1..=bricks.len() {
-  //     if supported[j].len() > 0 && supported[j].difference(&removed).count() == 0 {
-  //       removed.insert(j);
-  //     }
-  //   }
-  //   removed.len() - 1
-  // }).sum::<usize>();
-
-  let mut check:HashSet<usize> = HashSet::new();
+  let mut check: BTreeSet<usize> = BTreeSet::new();
   let mut falling = vec![HashSet::new(); bricks.len() + 1];
+  let mut p2 = 0;
 
   for i in (1..=bricks.len()).rev() {
     let mut ext = HashSet::new();
@@ -82,20 +80,17 @@ fn main(input: &str) -> (usize, usize) {
       for b in check.clone() {
         if supported[b].difference(&falling[i]).count() == 0 {
           falling[i].insert(b);
+          let new = falling[b].clone();
+          falling[i].extend(new);
           check.remove(&b);
         }
       }
 
       check.extend(ext.clone());
     }
+
+    p2 += falling[i].len();
   }
-
-  for (i, f) in falling.iter().enumerate() {
-    
-  }
-
-  let p2 = falling.iter().fold(0, |acc, f| acc + f.len());
-
 
   (p1,p2)
 }
