@@ -45,8 +45,6 @@ fn main(input: &str) -> (usize, usize) {
   let (even, odd, p1) = count_tiles(&garden, start.clone(), size, size + 1);
   let empty = even + odd;
 
-  println!("even {} + odd {} = {}", even, odd, empty);
-
   let corners = vec![(0,0), (0,size-1), (size-1, size-1), (size-1, 0)];
   let centers = vec![(0,start.1), (size-1,start.1), (start.0,0), (start.0,size-1)];
   
