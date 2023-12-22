@@ -14,8 +14,11 @@ fn main(input: &str) -> (usize, usize) {
   let mut heights = vec![vec![0_usize;10];10];
   let mut highest = vec![vec![0_usize;10];10];
   let mut critical = vec![false; bricks.len() + 1];
-  let mut supporting = vec![HashSet::new(); bricks.len() + 1];
+  
+  let mut single_support = vec![false; bricks.len() + 1];
   let mut supported = vec![HashSet::new(); bricks.len() + 1];
+  let mut supporting = vec![HashSet::new(); bricks.len() + 1];
+  
 
   for (i, brick) in bricks.iter().enumerate() {
     let brick_h = brick.1.0 - brick.0.0 + 1;
@@ -46,20 +49,52 @@ fn main(input: &str) -> (usize, usize) {
 
     if supports.len() == 1 {
       critical[*supports.iter().next().unwrap()] = true;
+      single_support[i+1] = true;
     }
   }
 
   let p1 = critical.iter().skip(1).fold(0, |acc, &c| acc + !c as usize);
 
-  let p2 = (1..=bricks.len()).map(|i| {
-    let mut removed: HashSet<usize> = HashSet::from_iter([i]);
-    for j in i+1..=bricks.len() {
-      if supported[j].len() > 0 && supported[j].difference(&removed).count() == 0 {
-        removed.insert(j);
+  // let p2 = (1..=bricks.len()).map(|i| {
+  //   let mut removed: HashSet<usize> = HashSet::from_iter([i]);
+  //   for j in i+1..=bricks.len() {
+  //     if supported[j].len() > 0 && supported[j].difference(&removed).count() == 0 {
+  //       removed.insert(j);
+  //     }
+  //   }
+  //   removed.len() - 1
+  // }).sum::<usize>();
+
+  let mut check:HashSet<usize> = HashSet::new();
+  let mut falling = vec![HashSet::new(); bricks.len() + 1];
+
+  for i in (1..=bricks.len()).rev() {
+    let mut ext = HashSet::new();
+    for j in supporting[i].clone() {
+      if single_support[j] {
+        falling[i].insert(j);
+        let new = falling[j].clone();
+        falling[i].extend(new);
+      } else {
+        ext.insert(j);
       }
+
+      for b in check.clone() {
+        if supported[b].difference(&falling[i]).count() == 0 {
+          falling[i].insert(b);
+          check.remove(&b);
+        }
+      }
+
+      check.extend(ext.clone());
     }
-    removed.len() - 1
-  }).sum::<usize>();
+  }
+
+  for (i, f) in falling.iter().enumerate() {
+    
+  }
+
+  let p2 = falling.iter().fold(0, |acc, f| acc + f.len());
 
 
   (p1,p2)
