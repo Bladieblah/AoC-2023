@@ -1,6 +1,6 @@
-use std::{collections::{VecDeque, BinaryHeap}, thread::current};
+use std::collections::{VecDeque, BinaryHeap};
 
-use hashbrown::{HashMap, HashSet};
+use hashbrown::HashMap;
 use itertools::Itertools;
 
 fn step(pos: (usize, usize), direction: &char) -> ((usize, usize), Vec<char>) {
@@ -15,11 +15,11 @@ fn step(pos: (usize, usize), direction: &char) -> ((usize, usize), Vec<char>) {
 
 fn valid(dir: &char, symbol: u8) -> bool {
   match (symbol, dir) {
-    (b'.', _) => true,
-    (b'>', 'E') => true,
-    (b'<', 'W') => true,
-    (b'v', 'S') => true,
-    _ => false
+    (b'#', _) => false,
+    // (b'>', 'E') => true,
+    // (b'<', 'W') => true,
+    // (b'v', 'S') => true,
+    _ => true
   }
 }
 
@@ -56,7 +56,7 @@ fn main(input: &str) -> (usize, usize) {
           break;
         }
 
-        let options = dirs.iter().map(|dir| (dir, step(pos, dir))).filter(|(dir, ((i,j), _))| valid(*dir, grid[*j][*i])).collect_vec();
+        let options = dirs.iter().map(|dir| (dir, step(pos, dir))).filter(|(dir, ((i,j), _))| *i < size && *j < size && valid(*dir, grid[*j][*i])).collect_vec();
 
         if options.len() > 1 {
           if !visited[pos.1][pos.0] {
@@ -72,6 +72,8 @@ fn main(input: &str) -> (usize, usize) {
           }
 
           break;
+        } else if options.len() == 0 {
+          break;
         }
 
         (pos, dirs) = options.first().unwrap().1.clone();
@@ -79,36 +81,33 @@ fn main(input: &str) -> (usize, usize) {
     }
   }
 
-  for (p, i) in node_ids.iter().sorted() {
-    println!("Node {} at ({}, {})", i, p.0, p.1);
-  }
-
-  for (i, v) in nodes.iter().sorted() {
-    for (j, d) in v {
-      println!("({}, {}) @ {}", i, j, d);
-    }
-  }
-
-  let mut q = BinaryHeap::<(usize, usize, usize, usize)>::from_iter([(1, 0, 1, 1)]);
+  let mut q = BinaryHeap::<(i32, usize, usize, usize)>::from_iter([(0, 0, 1, 1)]);
   let mut p1 = 0;
-  while let Some((_, dist, current, visited)) = q.pop() {
-    println!("Exploring node {} at dist {}", current, dist);
+  let mut p2 = 0;
+  
+  while let Some((pruned, dist, current, visited)) = q.pop() {
     if current == 2 {
+      let mut nc = 0;
       for i in 0..(nodes.len()) {
         if visited & (1 << i) > 0 {
-          println!("Visited {}", 1 << i);
+          nc += 1;
         }
       }
-      p1 = dist;
-      break;
+      if nc == 35 {
+        p2 = dist;
+        break;
+      }
+      continue;
     }
+
+    let avail: usize = nodes.get(&current).unwrap().iter().filter(|(next, _)| *next & visited == 0).map(|(_, d)| *d).sum();
+
     for (next, d) in nodes.get(&current).unwrap() {
       if *next & visited == 0 {
-        println!("Pushing next {} at dist {}", *next, dist + d);
-        q.push(((*next != 2) as usize, dist + d, *next, visited | *next));
+        q.push((pruned - (avail - d) as i32, dist + d, *next, visited | *next));
       }
     }
   }
 
-  (p1,0)
+  (p1,p2)
 }
